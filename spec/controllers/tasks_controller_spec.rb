@@ -59,7 +59,7 @@ RSpec.describe TasksController, type: :controller do
         # Render/Redirect: Verify that the response returns an error status.
         # 422 Unprocessable Entity indicates that while the request was understood,
         # the input was invalid.
-        expect(response.status).to eq(:unprocessable_entity)
+        expect(response.status).to eq(422)
       end
     end
   end

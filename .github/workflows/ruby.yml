@@ -1,43 +1,36 @@
 # This workflow uses actions that are not certified by GitHub.
 # They are provided by a third-party and are governed by
 # separate terms of service, privacy policy, and support documentation.
-
-# This workflow sets up Ruby, installs dependencies, creates the test database,
-# and runs tests automatically when you push to or open a pull request on the master branch.
+#
+# This workflow will:
+# - Download a prebuilt Ruby version
+# - Install dependencies
+# - Create and migrate the test database
+# - Run tests with Rake
+#
+# For more information: https://github.com/marketplace/actions/setup-ruby-jruby-and-truffleruby
 
 name: Ruby
-# The name of the workflow, as it will appear in the GitHub Actions UI.
 
 on:
   push:
-    branches: [ master ]
-    # Trigger the workflow when code is pushed to the master branch.
+    branches: [ master ]  # Trigger on push to master
   pull_request:
-    branches: [ master ]
-    # Also trigger the workflow when a pull request is opened or updated targeting master.
+    branches: [ master ]  # Trigger on PRs targeting master
 
 jobs:
   test:
-    # Define a job called 'test'. A job is a sequence of steps that run on a specific environment.
-
-    runs-on: ubuntu-latest
-    # Use the latest version of Ubuntu as the environment where the job runs.
+    runs-on: ubuntu-latest  # Run job on latest Ubuntu runner
 
     services:
       postgres:
-        # Define a PostgreSQL service (container) that will run alongside the job.
-        image: postgres:17.4
-        # Use PostgreSQL version 17.4 Docker image.
-
+        image: postgres:17.4  # Use PostgreSQL version 17.4
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: postgres
-          # These environment variables set up the database user, password, and DB name.
-
         ports:
-          - 5432:5432
-          # Map port 5432 from the container to the host machine so Rails can access it.
+          - 5432:5432  # Expose DB port
 
         options: >-
           --mount type=tmpfs,destination=/var/lib/postgresql/data
@@ -45,35 +38,27 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-          # Improve performance by storing DB data in memory (tmpfs).
-          # Use health checks to make sure PostgreSQL is ready before tests run.
+        # Do not place inline comments inside the 'options' value block!
+        # These options:
+        # - Use tmpfs to improve DB speed (RAM-only)
+        # - Add a health check so the service is "ready" before Rails connects
 
     env:
       PGHOST: localhost
       PGUSER: postgres
       PGPORT: 5432
       PGPASSWORD: postgres
-      RAILS_ENV: test
-      # These environment variables let Rails connect to the test database.
+      RAILS_ENV: test  # Set Rails environment to 'test'
 
     steps:
-      - uses: actions/checkout@v2
-        # This action checks out your repository's code so it can be used in the workflow.
-
+      - uses: actions/checkout@v2  # Clone repo into the runner
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.2.1' # needs to be inside quotes
-          # This installs Ruby version 3.2.1, as required by your project.
-
+          ruby-version: '3.2.1'  # Set Ruby version; must be in quotes
       - name: Install dependencies
-        run: bundle install
-        # Installs all the gems listed in your Gemfile.
-
+        run: bundle install  # Install gems
       - name: Create DB
-        run: bin/rails db:create db:migrate
-        # Creates and migrates the test database so it's ready for your app to use.
-
+        run: bin/rails db:create db:migrate  # Create and migrate test DB
       - name: Run tests
-        run: bundle exec rake
-        # Runs the test suite using Rake (which typically runs your RSpec tests).
+        run: bundle exec rake  # Run test suite (via Rake)
